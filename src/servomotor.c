@@ -29,14 +29,8 @@ static void handle_timer_interrupt();
 void initialize_servo() {
     cowpi_set_output_pins(1 << SERVO_PIN);
     center_servo();
-    // register_periodic_timer_ISR(0, PULSE_INCREMENT_uS, handle_timer_interrupt);
-}
-void initialize_servo() {
-    cowpi_set_output_pins(1 << SERVO_PIN);
-    center_servo();
     register_periodic_timer_ISR(0, PULSE_INCREMENT_uS, handle_timer_interrupt);
 }
-
 
 char *test_servo(char *buffer) {
     //  Add code to call the center_servo(), rotate_full_clockwise(), and rotate_full_counterclockwise() functions as necessary for Requirements 2-3
