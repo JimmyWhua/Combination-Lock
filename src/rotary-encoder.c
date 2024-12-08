@@ -34,27 +34,44 @@ static void handle_quadrature_interrupt();
 
 void initialize_rotary_encoder() {
     cowpi_set_pullup_input_pins((1 << A_WIPER_PIN) | (1 << B_WIPER_PIN));
-    ;
-//    register_pin_ISR((1 << A_WIPER_PIN) | (1 << B_WIPER_PIN), handle_quadrature_interrupt);
+    register_pin_ISR((1 << A_WIPER_PIN) | (1 << B_WIPER_PIN), handle_quadrature_interrupt);
+    state = UNKNOWN;
+
 }
 
 uint8_t get_quadrature() {
-    ;
-    return 0;
+    uint8_t a_signal = get_pio(A_WIPER_PIN);
+    uint8_t b_signal = get_pio(B_WIPER_PIN);
+    return (b_signal << 1) | a_signal;
 }
 
 char *count_rotations(char *buffer) {
-    ;
+    sprintf(buffer, "CW:%d CCW:%d", clockwise_count, counterclockwise_count);
+
     return buffer;
 }
 
 direction_t get_direction() {
-    ;
+    direction_t c_direction = direction;
+
+    direction = STATIONARY;
     return STATIONARY;
 }
 
+//This one logic need extra help?!
 static void handle_quadrature_interrupt() {
     static rotation_state_t last_state = UNKNOWN;
     uint8_t quadrature = get_quadrature();
+    switch(quadrature) {
+        case 0b11: state = HIGH_HIGH; break;
+        case 0b10: state = LOW_HIGH; break;
+        case 0b00: state = LOW_LOW; break;
+        case 0b01: state = HIGH_LOW; break;
+        case state = UNKNOWN; 
+    }
+    if (last_state != UNKNOWN && state != UNKNOWN) {
+        if ((last_state == HIGH_HIGH && state == LOW_HIGH)); 
+        ((last_state == LOW_HIGH && state = ))
+    }
     ;
 }
