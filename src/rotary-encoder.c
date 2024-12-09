@@ -92,7 +92,7 @@ static void handle_quadrature_interrupt() {
                 state = HIGH_HIGH;
                 last_state = HIGH_LOW;
                 direction = COUNTERCLOCKWISE; 
-            } else if(quadrature == 0b00){
+            } else if(last_state == HIGH_HIGH && quadrature == 0b00){ 
                 state = LOW_LOW;
                 last_state = HIGH_LOW;
                 direction = CLOCKWISE; 
@@ -101,11 +101,11 @@ static void handle_quadrature_interrupt() {
 
             }
         }else if(state == LOW_LOW){
-            if(quadrature == 0b01){
+            if(last_state == HIGH_LOW && quadrature== 0b01){
                 state = LOW_HIGH;
                 last_state = LOW_LOW;
                 direction = CLOCKWISE; 
-            } else if(quadrature == 0b10){
+            } else if( last_state == LOW_HIGH && quadrature == 0b10){
                 state = HIGH_LOW;
                 last_state = LOW_LOW;
                 direction = COUNTERCLOCKWISE; 
@@ -116,7 +116,7 @@ static void handle_quadrature_interrupt() {
                 state = HIGH_HIGH;
                 last_state = LOW_HIGH;
                 direction = CLOCKWISE;
-            } else if(quadrature == 0b00){
+            } else if(last_state == HIGH_HIGH && quadrature == 0b00){
                 state = LOW_LOW;
                 last_state = LOW_HIGH;
                 direction = COUNTERCLOCKWISE; 
