@@ -25,6 +25,10 @@ typedef enum {
     HIGH_HIGH, HIGH_LOW, LOW_LOW, LOW_HIGH, UNKNOWN
 } rotation_state_t;
 
+typedef enum {
+    counterclockwise, clockwise
+} direction;
+
 static rotation_state_t volatile state;
 static direction_t volatile direction = STATIONARY;
 static int volatile clockwise_count = 0;
@@ -63,10 +67,6 @@ direction_t get_direction() {
     return current_direction;
 }
 
-//
-typedef enum {
-
-}
 static void handle_quadrature_interrupt() {
     static rotation_state_t last_state = UNKNOWN;
     uint8_t quadrature = get_quadrature();
@@ -77,7 +77,7 @@ static void handle_quadrature_interrupt() {
         case 0b10: state = LOW_HIGH; break;
         case 0b01: state = HIGH_LOW; break;
         case 0b11: state = HIGH_HIGH; break;
-        case state = UNKNOWN; //state case to be determined 
+        default  : state = UNKNOWN; //state case to be determined 
     }
     //Recognizing clockwise indicator 
     if (last_state != UNKNOWN && state != UNKNOWN) {
