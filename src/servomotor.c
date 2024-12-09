@@ -36,16 +36,17 @@ char *test_servo(char *buffer) {
     //  Add code to call the center_servo(), rotate_full_clockwise(), and rotate_full_counterclockwise() functions as necessary for Requirements 2-3
     //  Add code to populate buffer with the strings required by Requirement 4
     //  Compile and upload your code, and confirm that the correct strings are displayed
-    center_servo();    // "SERVO: center"
-    sprintf(buffer, "SERVO: center");
-//  look for wait time?
-
-    rotate_full_clockwise();    // "SERVO: left"
-    sprintf(buffer, "SERVO: left");
-
-    rotate_full_counterclockwise();     //  "SERVO: right"
-    sprintf(buffer, "SERVO: right");
-
+    if (cowpi_left_button_is_pressed){  // When (and only when) the left pushbutton is pressed, the servo moves to the center position
+        center_servo();    
+        sprintf(buffer, "SERVO: center"); 
+    //  look for wait time?
+    } else if (cowpi_left_button_is_pressed == false && cowpi_left_switch_is_in_left_position ){   // When the left switch is in the left position (and the pushbutton is not pressed), the servo deflects fully clockwise
+        rotate_full_clockwise();    
+        sprintf(buffer, "SERVO: left");
+    } else if (cowpi_left_button_is_pressed == false && cowpi_left_switch_is_in_right_position ){  //  When the left switch is in the right position (and the pushbutton is not pressed), the servo deflects fully clockwise
+        rotate_full_counterclockwise();     
+        sprintf(buffer, "SERVO: right");
+    }
     return buffer;
 }
 
