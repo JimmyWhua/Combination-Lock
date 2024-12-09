@@ -36,16 +36,16 @@ char *test_servo(char *buffer) {
     //  Add code to call the center_servo(), rotate_full_clockwise(), and rotate_full_counterclockwise() functions as necessary for Requirements 2-3
     //  Add code to populate buffer with the strings required by Requirement 4
     //  Compile and upload your code, and confirm that the correct strings are displayed
-    if (cowpi_left_button_is_pressed){  // When (and only when) the left pushbutton is pressed, the servo moves to the center position
+    if (cowpi_left_button_is_pressed()){  // When (and only when) the left pushbutton is pressed, the servo moves to the center position
         center_servo();    
-        sprintf(buffer, "SERVO: center"); 
+        strcpy(buffer, "SERVO: center");
     //  look for wait time?
-    } else if (cowpi_left_button_is_pressed == false && cowpi_left_switch_is_in_left_position ){   // When the left switch is in the left position (and the pushbutton is not pressed), the servo deflects fully clockwise
+    } else if (cowpi_left_button_is_pressed() == false && cowpi_left_switch_is_in_left_position() ){   // When the left switch is in the left position (and the pushbutton is not pressed), the servo deflects fully clockwise
         rotate_full_clockwise();    
-        sprintf(buffer, "SERVO: left");
-    } else if (cowpi_left_button_is_pressed == false && cowpi_left_switch_is_in_right_position ){  //  When the left switch is in the right position (and the pushbutton is not pressed), the servo deflects fully clockwise
+        strcpy(buffer, "SERVO: left");
+    } else if (cowpi_left_button_is_pressed() == false && cowpi_left_switch_is_in_right_position() ){  //  When the left switch is in the right position (and the pushbutton is not pressed), the servo deflects fully clockwise
         rotate_full_counterclockwise();     
-        sprintf(buffer, "SERVO: right");
+        strcpy(buffer, "SERVO: right");
     }
     return buffer;
 }
@@ -70,24 +70,18 @@ static void handle_timer_interrupt() {
 // Add variables to track the time until the next rising edge of the pulse and the next falling edge of the pulse
     static int32_t rising_edge = 0;
     static int32_t falling_edge = 0;
-
 // ( ) Add code so that when the time until the next rising edge is 0μs:
-        // •Start the pulse by setting output pin 22 to 1.
     if (rising_edge <= 0) {     // Start the pulse
-        cowpi_set_output_pins(1<<SERVO_PIN);
-// Update your variable that tracks the time until the next rising edge, to the time
-        // until the next pulse should start.
+        cowpi_set_output_pins(1<<SERVO_PIN);        // •Start the pulse by setting output pin 22 to 1.
+// Update your variable that tracks the time until the next rising edge, to the time until the next pulse should start.
         rising_edge = SIGNAL_PERIOD_uS; //  signal period is how often the pulse is sent
-// •Update your variable that tracks the time until the next falling edge, to the time
-        // until this pulse should finish.
+// •Update your variable that tracks the time until the next falling edge, to the time until this pulse should finish.
         falling_edge = pulse_width_us;
-
     }
     if (falling_edge <= 0) {    // End the pulse
-        cowpi_set_output_pins(1<<SERVO_PIN);
-
+        cowpi_set_output_pins(0<<SERVO_PIN);
     }
 
-    rising_edge  += PULSE_INCREMENT_uS ;
-    falling_edge += PULSE_INCREMENT_uS ;
+    rising_edge  -= PULSE_INCREMENT_uS ;
+    falling_edge -= PULSE_INCREMENT_uS ;
 }
