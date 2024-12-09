@@ -83,7 +83,7 @@ static void handle_quadrature_interrupt() {
     if (last_state != UNKNOWN && state != UNKNOWN) {
 
     if ((last_state == HIGH_HIGH && state == LOW_HIGH) ||
-        (last_state == HIGH_LOW && state = LOW_LOW) ||
+        (last_state == HIGH_LOW && state == LOW_LOW) ||
         (last_state == LOW_LOW && state == HIGH_HIGH )||
         (last_state == HIGH_LOW && state == HIGH_HIGH)) {
             //set clockwise direction incrementation 
