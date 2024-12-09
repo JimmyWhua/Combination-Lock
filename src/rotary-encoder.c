@@ -105,6 +105,7 @@ static void handle_quadrature_interrupt() {
                 state = LOW_LOW;
                 last_state = HIGH_LOW;
                 direction = CLOCKWISE; 
+                clockwise_count++;
 
             }
         }else if(state == LOW_LOW){
@@ -122,37 +123,13 @@ static void handle_quadrature_interrupt() {
             if(quadrature == 0b11){
                 state = HIGH_HIGH;
                 last_state = LOW_HIGH;
-                direction = CLOCKWISE; 
+                direction = CLOCKWISE;
             } else if(quadrature == 0b00){
                 state = LOW_LOW;
                 last_state = LOW_HIGH;
                 direction = COUNTERCLOCKWISE; 
+                counterclockwise_count++;
             }
         }
-        
-
-    if ((last_state == HIGH_HIGH && state == LOW_HIGH) ||
-        (last_state == HIGH_LOW && state == LOW_LOW) ||
-        (last_state == LOW_LOW && state == HIGH_HIGH )||
-        (last_state == HIGH_LOW && state == HIGH_HIGH)) {
-            //set clockwise direction incrementation 
-            clockwise_count++; 
-            //Set direction rotation         
-            direction = CLOCKWISE; 
-        }
-      
-        //Recognzing counter-clockwise indicator 
-        else if ((last_state == HIGH_HIGH && state == HIGH_LOW) ||
-                (last_state == HIGH_LOW && state == LOW_LOW) ||
-                (last_state == LOW_LOW && state == LOW_HIGH) ||
-                (last_state == LOW_HIGH && state == HIGH_HIGH)) {
-                    //set counterclockwise direction by incrementation
-                    counterclockwise_count++;
-                    //Set direction rotation
-                    direction = COUNTERCLOCKWISE; 
-                }
     }
-
-    //Last state update 
-    last_state = state; 
 }
