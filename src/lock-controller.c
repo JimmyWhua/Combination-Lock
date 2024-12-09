@@ -49,6 +49,12 @@ void initialize_lock_controller() {
 }
 
 void control_lock() {
+    if (lockstate == 0){ // Start of Requirement 8 or 9
+//  Req 9. When system is LOCKED - left LED is on - the right LED is off
+        cowpi_illuminate_left_led();
+        cowpi_deluminate_right_led();
+    }
+    
 
 
 
@@ -59,16 +65,25 @@ void control_lock() {
         sprintf(DISPLAY ,"alert!");
         while (lockstate == 2) { // Blink LEDs while locked --> needs to be reset to continue
             cowpi_illuminate_left_led();
-            cowpi_illuminate_left_led();
+            cowpi_illuminate_right_led();
             for (size_t i = 0; i < 250000; i++);   // busy wait 1/4 second
             cowpi_deluminate_left_led();
             cowpi_deluminate_right_led();
             for (size_t i = 0; i < 250000; i++);   // busy wait 1/4 second is 250k us
         }
-    }else {     // add blink
-        numattempts ++;
+    }else {     // Requirement 18
+        lockstate = 0;
         sprintf(DISPLAY ,"bad try " + numattempts);
+        for (size_t i = 0; i < 2; i++){     //  both LEDs shall blink twice
+            cowpi_illuminate_left_led();
+            cowpi_illuminate_right_led();
+            for (size_t i = 0; i < 250000; i++);   // busy wait 1/4 second is 250k us
+            cowpi_deluminate_left_led();
+            cowpi_deluminate_right_led();
+            for (size_t i = 0; i < 250000; i++);   // busy wait 1/4 second is 250k us
+        }
 
     }
     ;
 }
+
