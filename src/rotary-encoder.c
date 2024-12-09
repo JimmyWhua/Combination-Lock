@@ -90,41 +90,46 @@ static void handle_quadrature_interrupt() {
             if (quadrature == 0b01){
                 state = LOW_HIGH;
                 last_state = HIGH_HIGH;
+                direction = COUNTERCLOCKWISE; 
             }else if (quadrature == 0b10){
                 state = HIGH_LOW;
                 last_state = HIGH_HIGH;
+                direction = CLOCKWISE; 
             }
         }else if(state == HIGH_LOW){
             if(quadrature == 0b11){
                 state = HIGH_HIGH;
                 last_state = HIGH_LOW;
+                direction = COUNTERCLOCKWISE; 
             } else if(quadrature == 0b00){
                 state = LOW_LOW;
                 last_state = HIGH_LOW;
+                direction = CLOCKWISE; 
+
             }
         }else if(state == LOW_LOW){
             if(quadrature == 0b01){
                 state = LOW_HIGH;
                 last_state = LOW_LOW;
+                direction = CLOCKWISE; 
             } else if(quadrature == 0b10){
                 state = HIGH_LOW;
                 last_state = LOW_LOW;
+                direction = COUNTERCLOCKWISE; 
+
             }
         }else if(state == LOW_HIGH){
             if(quadrature == 0b11){
                 state = HIGH_HIGH;
                 last_state = LOW_HIGH;
+                direction = CLOCKWISE; 
             } else if(quadrature == 0b00){
                 state = LOW_LOW;
                 last_state = LOW_HIGH;
+                direction = COUNTERCLOCKWISE; 
             }
         }
-        {
-            /* code */
-        }
         
-
-
 
     if ((last_state == HIGH_HIGH && state == LOW_HIGH) ||
         (last_state == HIGH_LOW && state == LOW_LOW) ||
