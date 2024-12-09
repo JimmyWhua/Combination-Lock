@@ -54,14 +54,21 @@ void control_lock() {
 
 //  When the system is ALARMED, it shall display alert! and both LEDs shall blink on-and-off every quarter-second
     numattempts++;
-    if (numattempts >= 3) {
+    if (numattempts >= 3) {     // Requirement 19
         lockstate = 2; // ALARMED
-        sprintf(buffer ,"alert!");
-        while (lockstate == 2) { // Blink LEDs
+        sprintf(DISPLAY ,"alert!");
+        while (lockstate == 2) { // Blink LEDs while locked --> needs to be reset to continue
             cowpi_illuminate_left_led();
-            cowpi_illuminate_right_led();
+            cowpi_illuminate_left_led();
             for (size_t i = 0; i < 250000; i++);   // busy wait 1/4 second
+            cowpi_deluminate_left_led();
+            cowpi_deluminate_right_led();
+            for (size_t i = 0; i < 250000; i++);   // busy wait 1/4 second is 250k us
         }
-        }
+    }else {     // add blink
+        numattempts ++;
+        sprintf(DISPLAY ,"bad try " + numattempts);
+
+    }
     ;
 }
