@@ -98,7 +98,6 @@ static void handle_quadrature_interrupt() {
                 direction = CLOCKWISE; 
                 clockwise_count++;
                 //count_rotations(CLOCKWISE);
-                //cowpi_add_display_module();
 
             }
         }else if(state == LOW_LOW){
@@ -123,7 +122,6 @@ static void handle_quadrature_interrupt() {
                 direction = COUNTERCLOCKWISE; 
                 counterclockwise_count++;
                 //count_rotations(COUNTERCLOCKWISE);
-                //cowpi_display_string();
             }
         }
     }
