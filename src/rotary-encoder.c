@@ -19,20 +19,21 @@
 #include "rotary-encoder.h"
 
 #define A_WIPER_PIN         (16)
-#define B_WIPER_PIN         (A_WIPER_PIN + 1)
+#define B_WIPER_PIN         (17)
 
 typedef enum {
     HIGH_HIGH, HIGH_LOW, LOW_LOW, LOW_HIGH, UNKNOWN
 } rotation_state_t;
 
-typedef enum {
-    counterclockwise, clockwise
-} direction;
+// typedef enum {
+//     counterclockwise, clockwise 
+// } directions;
 
 static rotation_state_t volatile state;
 static direction_t volatile direction = STATIONARY;
 static int volatile clockwise_count = 0;
 static int volatile counterclockwise_count = 0;
+
 
 static void handle_quadrature_interrupt();
 
@@ -45,17 +46,22 @@ void initialize_rotary_encoder() {
 }
 
 uint8_t get_quadrature() {
+    cowpi_ioport_t volatile *ioport = (cowpi_ioport_t *) (0xD0000000);;    
     //set up pins stats read for both A & B 
-    uint8_t a_signal = get_pio(A_WIPER_PIN);
-    uint8_t b_signal = get_pio(B_WIPER_PIN);
+    
+    uint32_t a_signal = ((ioport->input) & (1 << A_WIPER_PIN));
+    uint32_t b_signal = ((ioport->input) & (1 << B_WIPER_PIN));
+    // uint8_t signala = cowpi_register_pin_ISR
     //Signal shift by 1 bit 
-    return (b_signal << 1) | a_signal;
+    uint32_t BA = (b_signal >> A_WIPER_PIN) & (a_signal >> A_WIPER_PIN);
+    return BA;
+    // return (b_signal << 1) | a_signal;
 }
 
 char *count_rotations(char *buffer) {
-    //construct rotation counts to a string
+    //  construct rotation counts to a string
     sprintf(buffer, "CW:%d CCW:%d", clockwise_count, counterclockwise_count);
-    //buffer function returns count rotation 
+    //  buffer function returns count rotation 
     return buffer;
 }
 
@@ -72,7 +78,6 @@ static void handle_quadrature_interrupt() {
     uint8_t quadrature = get_quadrature();
     //Recognizing clockwise indicators
     switch(quadrature) {
-
         case 0b00: state = LOW_LOW; break;
         case 0b10: state = LOW_HIGH; break;
         case 0b01: state = HIGH_LOW; break;
@@ -89,7 +94,7 @@ static void handle_quadrature_interrupt() {
             //set clockwise direction incrementation 
             clockwise_count++; 
             //Set direction rotation         
-            direction = clockwise; 
+            direction = CLOCKWISE; 
         }
       
         //Recognzing counter-clockwise indicator 
@@ -100,7 +105,7 @@ static void handle_quadrature_interrupt() {
                     //set counterclockwise direction by incrementation
                     counterclockwise_count++;
                     //Set direction rotation
-                    direction = counterclockwise; 
+                    direction = COUNTERCLOCKWISE; 
                 }
     }
 
