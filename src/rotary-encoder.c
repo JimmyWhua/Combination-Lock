@@ -35,6 +35,7 @@ static void handle_quadrature_interrupt();
 
 void initialize_rotary_encoder() { 
     //Register interrupt service for pins A & B 
+    direction = STATIONARY;
     cowpi_set_pullup_input_pins((1 << A_WIPER_PIN) | (1 << B_WIPER_PIN));
     register_pin_ISR((1 << A_WIPER_PIN) | (1 << B_WIPER_PIN), handle_quadrature_interrupt);
     state = UNKNOWN; //initial state set to unknown 
@@ -45,17 +46,19 @@ uint8_t get_quadrature() {
     cowpi_ioport_t volatile *ioport = (cowpi_ioport_t *) (0xD0000000);;    
     //set up pins stats read for both A & B 
     
-    uint32_t a_signal = ((ioport->input) & (1 << A_WIPER_PIN));
-    uint32_t b_signal = ((ioport->input) & (1 << B_WIPER_PIN));
+    uint32_t a_signal = ((ioport->input) & (0x3 << A_WIPER_PIN));
+
+    //uint32_t b_signal = ((ioport->input) & (1 << B_WIPER_PIN));
     // uint8_t signala = cowpi_register_pin_ISR
     //Signal shift by 1 bit 
-    uint32_t BA = (b_signal >> A_WIPER_PIN) & (a_signal >> A_WIPER_PIN);
+    uint32_t BA = (a_signal >> A_WIPER_PIN);
+    //uint32_t BA = (b_signal >> A_WIPER_PIN) & (a_signal >> A_WIPER_PIN);
     return BA;
 }
 
 char *count_rotations(char *buffer) {
     //  construct rotation counts to a string
-    sprintf(buffer, "CW:%d CCW:%d", clockwise_count, counterclockwise_count);
+    sprintf(buffer, "CW:%-5d CCW:%-5d", clockwise_count, counterclockwise_count);
     //  buffer function returns count rotation 
     return buffer;
 }
@@ -71,6 +74,7 @@ direction_t get_direction() {
 static void handle_quadrature_interrupt() {
     static rotation_state_t last_state = UNKNOWN;
     uint8_t quadrature = get_quadrature();
+
     //Check statements for each direction of rotation
     if (last_state != UNKNOWN && state != UNKNOWN) {
         if (state == HIGH_HIGH){
@@ -93,6 +97,8 @@ static void handle_quadrature_interrupt() {
                 last_state = HIGH_LOW;
                 direction = CLOCKWISE; 
                 clockwise_count++;
+                //count_rotations(CLOCKWISE);
+                //cowpi_add_display_module();
 
             }
         }else if(state == LOW_LOW){
@@ -116,6 +122,8 @@ static void handle_quadrature_interrupt() {
                 last_state = LOW_HIGH;
                 direction = COUNTERCLOCKWISE; 
                 counterclockwise_count++;
+                //count_rotations(COUNTERCLOCKWISE);
+                //cowpi_display_string();
             }
         }
     }
