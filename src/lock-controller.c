@@ -59,7 +59,7 @@ void control_lock() {
         sprintf(buffer ,"alert!");
         while (lockstate == 2) { // Blink LEDs
             cowpi_illuminate_left_led();
-            cowpi_illuminate_left_led();
+            cowpi_illuminate_right_led();
             for (size_t i = 0; i < 250000; i++);   // busy wait 1/4 second
         }
         }
