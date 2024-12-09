@@ -77,15 +77,54 @@ static void handle_quadrature_interrupt() {
     static rotation_state_t last_state = UNKNOWN;
     uint8_t quadrature = get_quadrature();
     //Recognizing clockwise indicators
-    switch(quadrature) {
-        case 0b00: state = LOW_LOW; break;
-        case 0b10: state = LOW_HIGH; break;
-        case 0b01: state = HIGH_LOW; break;
-        case 0b11: state = HIGH_HIGH; break;
-        default  : state = UNKNOWN; //state case to be determined 
-    }
+    // switch(quadrature) {
+    //     case 0b00: state = LOW_LOW; break;
+    //     case 0b10: state = LOW_HIGH; break;
+    //     case 0b01: state = HIGH_LOW; break;
+    //     case 0b11: state = HIGH_HIGH; break;
+    //     default  : state = UNKNOWN; //state case to be determined 
+    // }
     //Recognizing clockwise indicator 
     if (last_state != UNKNOWN && state != UNKNOWN) {
+        if (state == HIGH_HIGH){
+            if (quadrature == 0b01){
+                state = LOW_HIGH;
+                last_state = HIGH_HIGH;
+            }else if (quadrature == 0b10){
+                state = HIGH_LOW;
+                last_state = HIGH_HIGH;
+            }
+        }else if(state == HIGH_LOW){
+            if(quadrature == 0b11){
+                state = HIGH_HIGH;
+                last_state = HIGH_LOW;
+            } else if(quadrature == 0b00){
+                state = LOW_LOW;
+                last_state = HIGH_LOW;
+            }
+        }else if(state == LOW_LOW){
+            if(quadrature == 0b01){
+                state = LOW_HIGH;
+                last_state = LOW_LOW;
+            } else if(quadrature == 0b10){
+                state = HIGH_LOW;
+                last_state = LOW_LOW;
+            }
+        }else if(state == LOW_HIGH){
+            if(quadrature == 0b11){
+                state = HIGH_HIGH;
+                last_state = LOW_HIGH;
+            } else if(quadrature == 0b00){
+                state = LOW_LOW;
+                last_state = LOW_HIGH;
+            }
+        }
+        {
+            /* code */
+        }
+        
+
+
 
     if ((last_state == HIGH_HIGH && state == LOW_HIGH) ||
         (last_state == HIGH_LOW && state == LOW_LOW) ||
