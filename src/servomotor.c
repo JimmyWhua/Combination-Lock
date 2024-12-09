@@ -36,7 +36,7 @@ char *test_servo(char *buffer) {
     //  Add code to call the center_servo(), rotate_full_clockwise(), and rotate_full_counterclockwise() functions as necessary for Requirements 2-3
     //  Add code to populate buffer with the strings required by Requirement 4
     //  Compile and upload your code, and confirm that the correct strings are displayed
-    if (cowpi_left_button_is_pressed()){  // When (and only when) the left pushbutton is pressed, the servo moves to the center position
+    if (cowpi_left_button_is_pressed()==true){  // When (and only when) the left pushbutton is pressed, the servo moves to the center position
         center_servo();    
         strcpy(buffer, "SERVO: center");
     //  look for wait time?
@@ -68,20 +68,18 @@ void rotate_full_counterclockwise() {   //  2500μs pulse directs the servomotor
 // the next falling edge, to reflect the time that has elapsed between timer interrupts.
 static void handle_timer_interrupt() {
 // Add variables to track the time until the next rising edge of the pulse and the next falling edge of the pulse
-    static int32_t rising_edge = 0;
-    static int32_t falling_edge = 0;
+    static int32_t rising_edge = PULSE_INCREMENT_uS;
+    static int32_t falling_edge = PULSE_INCREMENT_uS;
+    cowpi_ioport_t volatile* a = (cowpi_ioport_t *) (0xD0000000);
 // ( ) Add code so that when the time until the next rising edge is 0μs:
     if (rising_edge <= 0) {     // Start the pulse
-        cowpi_set_output_pins(1<<SERVO_PIN);        // •Start the pulse by setting output pin 22 to 1.
-// Update your variable that tracks the time until the next rising edge, to the time until the next pulse should start.
-        rising_edge = SIGNAL_PERIOD_uS; //  signal period is how often the pulse is sent
-// •Update your variable that tracks the time until the next falling edge, to the time until this pulse should finish.
-        falling_edge = pulse_width_us;
+        a->output |= (1<<SERVO_PIN);        // •Start the pulse by setting output pin 22 to 1.
+        rising_edge = SIGNAL_PERIOD_uS;     // Update your variable that tracks the time until the next rising edge, to the time until the next pulse should start.
+        falling_edge = pulse_width_us;      // •Update your variable that tracks the time until the next falling edge, to the time until this pulse should finish.
     }
     if (falling_edge <= 0) {    // End the pulse
-        cowpi_set_output_pins(0<<SERVO_PIN);
+        a->output &= (0<<SERVO_PIN);        // •Start the pulse by setting output pin 22 to 1.
     }
-
     rising_edge  -= PULSE_INCREMENT_uS ;
     falling_edge -= PULSE_INCREMENT_uS ;
 }
