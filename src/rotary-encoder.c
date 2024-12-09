@@ -64,6 +64,9 @@ direction_t get_direction() {
 }
 
 //
+typedef enum {
+
+}
 static void handle_quadrature_interrupt() {
     static rotation_state_t last_state = UNKNOWN;
     uint8_t quadrature = get_quadrature();
@@ -73,7 +76,7 @@ static void handle_quadrature_interrupt() {
         case 0b00: state = LOW_LOW; break;
         case 0b10: state = LOW_HIGH; break;
         case 0b01: state = HIGH_LOW; break;
-        case 0b01: state = HIGH_LOW; break;
+        case 0b11: state = HIGH_HIGH; break;
         case state = UNKNOWN; //state case to be determined 
     }
     //Recognizing clockwise indicator 
@@ -86,7 +89,7 @@ static void handle_quadrature_interrupt() {
             //set clockwise direction incrementation 
             clockwise_count++; 
             //Set direction rotation         
-            direction = clockwise_count; 
+            direction = clockwise; 
         }
       
         //Recognzing counter-clockwise indicator 
