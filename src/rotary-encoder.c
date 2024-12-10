@@ -1,13 +1,13 @@
-/**************************************************************************//**
+/**************************************************************************/ /**
  *
  * @file rotary-encoder.c
  *
- * @author (Jimmy Hua)
- * @author (Abdelrahman Elhaj)
- *
- * @brief Code to determine the direction that a rotary encoder is turning.
- *
- ******************************************************************************/
+* @author (Jimmy Hua)
+* @author (Abdelrahman Elhaj)
+*
+* @brief Code to determine the direction that a rotary encoder is turning.
+*
+******************************************************************************/
 
 /*
  * ComboLock GroupLab assignment and starter code (c) 2022-24 Christopher A. Bohn
@@ -18,128 +18,109 @@
 #include "interrupt_support.h"
 #include "rotary-encoder.h"
 
-#define A_WIPER_PIN         (16)
-#define B_WIPER_PIN         (17)
+#define A_WIPER_PIN (16)
+#define B_WIPER_PIN (17)
 
 typedef enum {
-    HIGH_HIGH, HIGH_LOW, LOW_LOW, LOW_HIGH, UNKNOWN
+    LOW_LOW = 0b00, LOW_HIGH = 0b01, HIGH_LOW = 0b10, HIGH_HIGH = 0b11, UNKNOWN
 } rotation_state_t;
 
-static rotation_state_t volatile state;
-static direction_t volatile direction = STATIONARY;
-static int volatile clockwise_count = 0;
-static int volatile counterclockwise_count = 0;
-
+static volatile rotation_state_t last_state = UNKNOWN;
+static volatile direction_t direction = STATIONARY;
+static volatile int clockwise_count = 0;
+static volatile int counterclockwise_count = 0;
 
 static void handle_quadrature_interrupt();
 
-void initialize_rotary_encoder() { 
-    //Register interrupt service for pins A & B 
-    switch (get_quadrature()){
-        case 1: state = HIGH_HIGH;
-        break;
-        case 2: state = HIGH_LOW;
-        break;
-        case 3: state = LOW_LOW;
-        break;
-        case 4: state = LOW_HIGH;
-        break;
-        default: state = UNKNOWN;
-        
-    }
-    direction = STATIONARY;
-    cowpi_set_pullup_input_pins((1 << A_WIPER_PIN) | (1 << B_WIPER_PIN));
-    register_pin_ISR((1 << A_WIPER_PIN) | (1 << B_WIPER_PIN), handle_quadrature_interrupt);
-    //state = UNKNOWN; //initial state set to unknown 
-
-}
-
 uint8_t get_quadrature() {
-    cowpi_ioport_t volatile *ioport = (cowpi_ioport_t *) (0xD0000000);;    
-    //set up pins stats read for both A & B 
-    
-    uint32_t a_signal = ((ioport->input) & (0x3 << A_WIPER_PIN));
-    
-    //uint32_t b_signal = ((ioport->input) & (1 << B_WIPER_PIN));
-    // uint8_t signala = cowpi_register_pin_ISR
-    //Signal shift by 1 bit 
-    uint32_t BA = (a_signal >> 16);
-    //uint32_t BA = (b_signal >> A_WIPER_PIN) & (a_signal >> A_WIPER_PIN);
+    cowpi_ioport_t volatile *ioport = (cowpi_ioport_t *)(0xD0000000);
+    uint8_t BA = (uint8_t)((ioport->input >> A_WIPER_PIN) & 0x03);
     return BA;
 }
 
+void initialize_rotary_encoder() {
+    uint8_t quadrature = get_quadrature();
+    switch (quadrature) {
+        case 0b00: last_state = LOW_LOW;   break;
+        case 0b01: last_state = LOW_HIGH;  break;
+        case 0b10: last_state = HIGH_LOW;  break;
+        case 0b11: last_state = HIGH_HIGH; break;
+        default:   last_state = UNKNOWN;   break;
+    }
+
+    direction = STATIONARY;
+    clockwise_count = 0;
+    counterclockwise_count = 0;
+
+    cowpi_set_pullup_input_pins((1 << A_WIPER_PIN) | (1 << B_WIPER_PIN));
+    register_pin_ISR((1 << A_WIPER_PIN) | (1 << B_WIPER_PIN), handle_quadrature_interrupt);
+}
+
 char *count_rotations(char *buffer) {
-    //  construct rotation counts to a string
-    sprintf(buffer, "CW:%-5d | CCW:%-5d", clockwise_count, counterclockwise_count);
-    //  buffer function returns count rotation 
+    sprintf(buffer, "CW: %d | CCW: %d", clockwise_count, counterclockwise_count);
     return buffer;
 }
 
 direction_t get_direction() {
-    //store current direction into variable 
-    direction_t current_direction = direction;
-    //reset direction 
+    direction_t state = direction;
     direction = STATIONARY;
-    return current_direction;
+    return state;
 }
 
 static void handle_quadrature_interrupt() {
-    static rotation_state_t last_state = HIGH_HIGH;
     uint8_t quadrature = get_quadrature();
+    rotation_state_t state;
 
-    //Check statements for each direction of rotation
-    //if (last_state != UNKNOWN && state != UNKNOWN) {
-    switch ( quadrature ) {
-        //case 1: state = HIGH_HIGH;  break;
-        //case 2: state = HIGH_LOW;   break;
-        //case 3: state = LOW_LOW;    break;
-        //case 4: state = LOW_HIGH;   break;
-        //default:state = UNKNOWN;    break;
+    switch (quadrature) {
+        case 0b00: state = LOW_LOW;   break;
+        case 0b01: state = LOW_HIGH;  break;
+        case 0b10: state = HIGH_LOW;  break;
+        case 0b11: state = HIGH_HIGH; break;
+        default:   state = UNKNOWN;   break;
     }
 
-    // Process state transitions
-    switch (state) {
-            
-            case HIGH_HIGH:  
-                if (last_state == HIGH_LOW && quadrature == 0b01 ) { 
-                    state = LOW_HIGH;
-                } else if (last_state == LOW_HIGH && quadrature == 0b10)  {
-                    state = HIGH_LOW;
-                }
-                break;
-
-            case HIGH_LOW:
-                if (last_state == LOW_LOW && quadrature == 0b11) {
-                    direction = COUNTERCLOCKWISE;
-                    state = HIGH_HIGH;
-                    // clockwise_count++;
-                } else if (last_state == HIGH_HIGH && quadrature == 0b00) {
-                    direction = CLOCKWISE;
-                    state = LOW_LOW;
-                    clockwise_count++;  // increment 2 places only
-                }
-                break;
-
-            case LOW_HIGH:
-                if (last_state == LOW_LOW && quadrature == 0b11) {
-                    direction = CLOCKWISE;
-                    state = HIGH_HIGH;
-                    counterclockwise_count++;   // increment 2 places only
-                } else if (last_state == HIGH_HIGH && quadrature == 0b00){
-                    state = LOW_LOW;
-                    direction = COUNTERCLOCKWISE;
-                }
-                break;
-
-            case LOW_LOW:
-                if (last_state == LOW_HIGH && quadrature == 0b10 ) {
-                    state = HIGH_LOW;
-                    direction = COUNTERCLOCKWISE;
-                } else if (last_state == HIGH_LOW && quadrature == 0b01) {
-                    state = LOW_HIGH;
-                    direction = CLOCKWISE;
-                }
-                break;
-        default: 
-        }
+    if (state == UNKNOWN || last_state == UNKNOWN) {
+        last_state = state;
+        return;
     }
+    if (state == last_state) {
+        return;
+    }
+
+    switch (last_state) {
+        case HIGH_HIGH:
+            if (state == HIGH_LOW && quadrature == 0b10) {
+                direction = CLOCKWISE; 
+            }
+            else if (state == LOW_HIGH && quadrature == 0b01) {
+                direction = COUNTERCLOCKWISE;
+            } else {
+                direction = STATIONARY;
+            }
+            break;
+
+        case HIGH_LOW:
+            if (state == LOW_LOW && quadrature == 0b00 && direction == CLOCKWISE) {
+                clockwise_count++;
+                direction = STATIONARY; 
+            }
+            break;
+
+        case LOW_HIGH:
+            if (state == LOW_LOW && quadrature == 0b00 && direction == COUNTERCLOCKWISE) {
+                counterclockwise_count++;
+                direction = STATIONARY; 
+            }
+            break;
+
+        case LOW_LOW:
+            direction = STATIONARY;
+            break;
+
+        default:
+            direction = STATIONARY;
+            break;
+    }
+
+    last_state = state;
+}
