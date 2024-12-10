@@ -22,7 +22,7 @@
 #define B_WIPER_PIN (17)
 
 typedef enum {
-    LOW_LOW = 0b00, LOW_HIGH = 0b01, HIGH_LOW = 0b10, HIGH_HIGH = 0b11, UNKNOWN
+    LOW_LOW, LOW_HIGH , HIGH_LOW, HIGH_HIGH , UNKNOWN
 } rotation_state_t;
 
 static volatile rotation_state_t last_state = UNKNOWN;
