@@ -63,7 +63,7 @@ uint8_t get_quadrature() {
     //uint32_t b_signal = ((ioport->input) & (1 << B_WIPER_PIN));
     // uint8_t signala = cowpi_register_pin_ISR
     //Signal shift by 1 bit 
-    uint32_t BA = (a_signal >> A_WIPER_PIN);
+    uint32_t BA = (a_signal >> 16);
     //uint32_t BA = (b_signal >> A_WIPER_PIN) & (a_signal >> A_WIPER_PIN);
     return BA;
 }
