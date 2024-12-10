@@ -70,7 +70,7 @@ uint8_t get_quadrature() {
 
 char *count_rotations(char *buffer) {
     //  construct rotation counts to a string
-    sprintf(buffer, "CW:%-5d|CCW:%-5d", clockwise_count, counterclockwise_count);
+    sprintf(buffer, "CW:%-5d | CCW:%-5d", clockwise_count, counterclockwise_count);
     //  buffer function returns count rotation 
     return buffer;
 }
@@ -89,26 +89,23 @@ static void handle_quadrature_interrupt() {
 
     //Check statements for each direction of rotation
     //if (last_state != UNKNOWN && state != UNKNOWN) {
-    switch (quadrature) {
-        case 1: state = HIGH_HIGH;  break;
-        case 2: state = HIGH_LOW;   break;
-        case 3: state = LOW_LOW;    break;
-        case 4: state = LOW_HIGH;   break;
-        default:state = UNKNOWN;    break;
+    switch ( quadrature ) {
+        //case 1: state = HIGH_HIGH;  break;
+        //case 2: state = HIGH_LOW;   break;
+        //case 3: state = LOW_LOW;    break;
+        //case 4: state = LOW_HIGH;   break;
+        //default:state = UNKNOWN;    break;
     }
 
     // Process state transitions
-    if (last_state != UNKNOWN) {
-        switch (state) {
+    switch (state) {
+            
             case HIGH_HIGH:  
                 if (last_state == HIGH_LOW && quadrature == 0b01 ) { 
-                    direction = COUNTERCLOCKWISE;
                     state = LOW_HIGH;
                 } else if (last_state == LOW_HIGH && quadrature == 0b10)  {
-                    direction = CLOCKWISE;
                     state = HIGH_LOW;
                 }
-                last_state = HIGH_HIGH;
                 break;
 
             case HIGH_LOW:
@@ -121,8 +118,6 @@ static void handle_quadrature_interrupt() {
                     state = LOW_LOW;
                     clockwise_count++;  // increment 2 places only
                 }
-                last_state = HIGH_LOW;
-
                 break;
 
             case LOW_HIGH:
@@ -134,7 +129,6 @@ static void handle_quadrature_interrupt() {
                     state = LOW_LOW;
                     direction = COUNTERCLOCKWISE;
                 }
-                last_state = LOW_HIGH;
                 break;
 
             case LOW_LOW:
@@ -145,21 +139,7 @@ static void handle_quadrature_interrupt() {
                     state = LOW_HIGH;
                     direction = CLOCKWISE;
                 }
-                last_state = LOW_LOW;
                 break;
-
-            case UNKNOWN:
-
-            
-                break;
-
-        default:
-        ;
+        default: 
         }
-    }else{
-        last_state = UNKNOWN;
-        state = UNKNOWN;
-        counterclockwise_count = -90;
-        clockwise_count = -90;
     }
-}
