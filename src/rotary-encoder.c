@@ -35,10 +35,22 @@ static void handle_quadrature_interrupt();
 
 void initialize_rotary_encoder() { 
     //Register interrupt service for pins A & B 
+    switch (get_quadrature()){
+        case 1: state = HIGH_HIGH;
+        break;
+        case 2: state = HIGH_LOW;
+        break;
+        case 3: state = LOW_LOW;
+        break;
+        case 4: state = LOW_HIGH;
+        break;
+        default: state = UNKNOWN;
+        
+    }
     direction = STATIONARY;
     cowpi_set_pullup_input_pins((1 << A_WIPER_PIN) | (1 << B_WIPER_PIN));
     register_pin_ISR((1 << A_WIPER_PIN) | (1 << B_WIPER_PIN), handle_quadrature_interrupt);
-    state = UNKNOWN; //initial state set to unknown 
+    //state = UNKNOWN; //initial state set to unknown 
 
 }
 
@@ -47,7 +59,7 @@ uint8_t get_quadrature() {
     //set up pins stats read for both A & B 
     
     uint32_t a_signal = ((ioport->input) & (0x3 << A_WIPER_PIN));
-
+    
     //uint32_t b_signal = ((ioport->input) & (1 << B_WIPER_PIN));
     // uint8_t signala = cowpi_register_pin_ISR
     //Signal shift by 1 bit 
@@ -58,7 +70,7 @@ uint8_t get_quadrature() {
 
 char *count_rotations(char *buffer) {
     //  construct rotation counts to a string
-    sprintf(buffer, "CW:%-5d CCW:%-5d", clockwise_count, counterclockwise_count);
+    sprintf(buffer, "CW:%-5d|CCW:%-5d", clockwise_count, counterclockwise_count);
     //  buffer function returns count rotation 
     return buffer;
 }
@@ -72,57 +84,82 @@ direction_t get_direction() {
 }
 
 static void handle_quadrature_interrupt() {
-    static rotation_state_t last_state = UNKNOWN;
+    static rotation_state_t last_state = HIGH_HIGH;
     uint8_t quadrature = get_quadrature();
 
     //Check statements for each direction of rotation
-    if (last_state != UNKNOWN && state != UNKNOWN) {
-        if (state == HIGH_HIGH){
-            if (quadrature == 0b01){
-                state = LOW_HIGH;
-                last_state = HIGH_HIGH;
-                direction = COUNTERCLOCKWISE; 
-            }else if (quadrature == 0b10){
-                state = HIGH_LOW;
-                last_state = HIGH_HIGH;
-                direction = CLOCKWISE; 
-            }
-        }else if(state == HIGH_LOW){
-            if(quadrature == 0b11){
-                state = HIGH_HIGH;
-                last_state = HIGH_LOW;
-                direction = COUNTERCLOCKWISE; 
-            } else if(last_state == HIGH_HIGH && quadrature == 0b00){ 
-                state = LOW_LOW;
-                last_state = HIGH_LOW;
-                direction = CLOCKWISE; 
-                clockwise_count++;
-                //count_rotations(CLOCKWISE);
+    //if (last_state != UNKNOWN && state != UNKNOWN) {
+    switch (quadrature) {
+        case 1: state = HIGH_HIGH;  break;
+        case 2: state = HIGH_LOW;   break;
+        case 3: state = LOW_LOW;    break;
+        case 4: state = LOW_HIGH;   break;
+        default:state = UNKNOWN;    break;
+    }
 
-            }
-        }else if(state == LOW_LOW){
-            if(last_state == HIGH_LOW && quadrature== 0b01){
-                state = LOW_HIGH;
-                last_state = LOW_LOW;
-                direction = CLOCKWISE; 
-            } else if( last_state == LOW_HIGH && quadrature == 0b10){
-                state = HIGH_LOW;
-                last_state = LOW_LOW;
-                direction = COUNTERCLOCKWISE; 
+    // Process state transitions
+    if (last_state != UNKNOWN) {
+        switch (state) {
+            case HIGH_HIGH:  
+                if (last_state == HIGH_LOW && quadrature == 0b01 ) { 
+                    direction = COUNTERCLOCKWISE;
+                    state = LOW_HIGH;
+                } else if (last_state == LOW_HIGH && quadrature == 0b10)  {
+                    direction = CLOCKWISE;
+                    state = HIGH_LOW;
+                }
+                last_state = HIGH_HIGH;
+                break;
 
-            }
-        }else if(state == LOW_HIGH){
-            if(quadrature == 0b11){
-                state = HIGH_HIGH;
+            case HIGH_LOW:
+                if (last_state == LOW_LOW && quadrature == 0b11) {
+                    direction = COUNTERCLOCKWISE;
+                    state = HIGH_HIGH;
+                    // clockwise_count++;
+                } else if (last_state == HIGH_HIGH && quadrature == 0b00) {
+                    direction = CLOCKWISE;
+                    state = LOW_LOW;
+                    clockwise_count++;  // increment 2 places only
+                }
+                last_state = HIGH_LOW;
+
+                break;
+
+            case LOW_HIGH:
+                if (last_state == LOW_LOW && quadrature == 0b11) {
+                    direction = CLOCKWISE;
+                    state = HIGH_HIGH;
+                    counterclockwise_count++;   // increment 2 places only
+                } else if (last_state == HIGH_HIGH && quadrature == 0b00){
+                    state = LOW_LOW;
+                    direction = COUNTERCLOCKWISE;
+                }
                 last_state = LOW_HIGH;
-                direction = CLOCKWISE;
-            } else if(last_state == HIGH_HIGH && quadrature == 0b00){
-                state = LOW_LOW;
-                last_state = LOW_HIGH;
-                direction = COUNTERCLOCKWISE; 
-                counterclockwise_count++;
-                //count_rotations(COUNTERCLOCKWISE);
-            }
+                break;
+
+            case LOW_LOW:
+                if (last_state == LOW_HIGH && quadrature == 0b10 ) {
+                    state = HIGH_LOW;
+                    direction = COUNTERCLOCKWISE;
+                } else if (last_state == HIGH_LOW && quadrature == 0b01) {
+                    state = LOW_HIGH;
+                    direction = CLOCKWISE;
+                }
+                last_state = LOW_LOW;
+                break;
+
+            case UNKNOWN:
+
+            
+                break;
+
+        default:
+        ;
         }
+    }else{
+        last_state = UNKNOWN;
+        state = UNKNOWN;
+        counterclockwise_count = -90;
+        clockwise_count = -90;
     }
 }
