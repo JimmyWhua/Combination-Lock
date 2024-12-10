@@ -36,6 +36,8 @@ uint8_t get_quadrature() {
     cowpi_ioport_t volatile *ioport = (cowpi_ioport_t *)(0xD0000000);
     uint8_t BA = (uint8_t)((ioport->input >> A_WIPER_PIN) & 0x03);
     return BA;
+    //uint32_t a_signal = ((ioport->input) & (1 << A_WIPER_PIN));
+    //uint32_t b_signal = ((ioport->input) & (1 << B_WIPER_PIN));
 }
 
 void initialize_rotary_encoder() {
