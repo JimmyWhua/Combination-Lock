@@ -25,7 +25,7 @@ typedef enum {
     LOW_LOW, LOW_HIGH , HIGH_LOW, HIGH_HIGH , UNKNOWN
 } rotation_state_t;
 
-static volatile rotation_state_t last_state = UNKNOWN;
+static volatile rotation_state_t state = UNKNOWN;
 static volatile direction_t direction = STATIONARY;
 static volatile int clockwise_count = 0;
 static volatile int counterclockwise_count = 0;
@@ -41,11 +41,11 @@ uint8_t get_quadrature() {
 void initialize_rotary_encoder() {
     uint8_t quadrature = get_quadrature();
     switch (quadrature) {
-        case 0b00: last_state = LOW_LOW;   break;
-        case 0b01: last_state = LOW_HIGH;  break;
-        case 0b10: last_state = HIGH_LOW;  break;
-        case 0b11: last_state = HIGH_HIGH; break;
-        default:   last_state = UNKNOWN;   break;
+        case 0b00: state = LOW_LOW;   break;
+        case 0b01: state = LOW_HIGH;  break;
+        case 0b10: state = HIGH_LOW;  break;
+        case 0b11: state = HIGH_HIGH; break;
+        default:   state = UNKNOWN;   break;
     }
 
     direction = STATIONARY;
@@ -69,30 +69,30 @@ direction_t get_direction() {
 
 static void handle_quadrature_interrupt() {
     uint8_t quadrature = get_quadrature();
-    rotation_state_t state;
+    rotation_state_t last_state;
 
     switch (quadrature) {
-        case 0b00: state = LOW_LOW;   break;
-        case 0b01: state = LOW_HIGH;  break;
-        case 0b10: state = HIGH_LOW;  break;
-        case 0b11: state = HIGH_HIGH; break;
-        default:   state = UNKNOWN;   break;
+        case 0b00: last_state = LOW_LOW;   break;
+        case 0b01: last_state = LOW_HIGH;  break;
+        case 0b10: last_state = HIGH_LOW;  break;
+        case 0b11: last_state = HIGH_HIGH; break;
+        default:   last_state = UNKNOWN;   break;
     }
 
     if (state == UNKNOWN || last_state == UNKNOWN) {
         last_state = state;
         return;
     }
-    if (state == last_state) {
+    if (last_state == state) {
         return;
     }
 
-    switch (last_state) {
+    switch (state) {
         case HIGH_HIGH:
-            if (state == HIGH_LOW && quadrature == 0b10) {
+            if (last_state == HIGH_LOW && quadrature == 0b10) {
                 direction = CLOCKWISE; 
             }
-            else if (state == LOW_HIGH && quadrature == 0b01) {
+            else if (last_state == LOW_HIGH && quadrature == 0b01) {
                 direction = COUNTERCLOCKWISE;
             } else {
                 direction = STATIONARY;
@@ -100,14 +100,14 @@ static void handle_quadrature_interrupt() {
             break;
 
         case HIGH_LOW:
-            if (state == LOW_LOW && quadrature == 0b00 && direction == CLOCKWISE) {
+            if (last_state == LOW_LOW && quadrature == 0b00 && direction == CLOCKWISE) {
                 clockwise_count++;
                 direction = STATIONARY; 
             }
             break;
 
         case LOW_HIGH:
-            if (state == LOW_LOW && quadrature == 0b00 && direction == COUNTERCLOCKWISE) {
+            if (last_state == LOW_LOW && quadrature == 0b00 && direction == COUNTERCLOCKWISE) {
                 counterclockwise_count++;
                 direction = STATIONARY; 
             }
@@ -122,5 +122,5 @@ static void handle_quadrature_interrupt() {
             break;
     }
 
-    last_state = state;
+    state = last_state;
 }
